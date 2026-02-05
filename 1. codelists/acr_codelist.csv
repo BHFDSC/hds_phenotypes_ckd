@@ -1,0 +1,11 @@
+code,description,terminology
+1028271000000109,Albumin/creatinine ratio (observable entity),SNOMED
+5801000237100,Mass concentration ratio of microalbumin to creatinine in urine (observable entity),SNOMED
+58201000237103,Mass concentration ratio of protein to creatinine in urine (observable entity),SNOMED
+1006631000000104,Random urine protein:creatinine ratio (observable entity),SNOMED
+149861000000104,Semi-quantitative result of albumin to creatinine ratio in urine by test strip (observable entity),SNOMED
+1023491000000104,Urine albumin:creatinine ratio (observable entity),SNOMED
+1027791000000103,Urine microalbumin/creatinine ratio (observable entity),SNOMED
+1028731000000100,Urine protein/creatinine ratio (observable entity),SNOMED
+1108311000000109,Ratio of protein to creatinine in 24 hour urine specimen (observable entity),SNOMED
+1006631000000100,Random urine protein:creatinine ratio (observable entity),SNOMED
