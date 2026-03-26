@@ -10,21 +10,18 @@
 # reshape_long_to_wide
 # check_id
 # check_null
-# null_safe_equality
+# nullb_safe_equality
 # compare_files
 # sdc
-# codelist_match
+# codelist_match---
 # codelist_match_summ
 # create_table
 # drop_table
 # temp_save
 # save_table
 # table_summ
-# provisioning_date
+# get_provisioning_date
 # extract_batch_from_archive
-
-# zw
-
 
 # COMMAND ----------
 
@@ -79,7 +76,8 @@ def count_var(df, var1: str, ret=0, df_desc='', indx=0) -> None:
   '''
   
   import pyspark.sql.functions as f
-  import databricks.koalas as ks
+  # import databricks.koalas as ks # 20251009 - COMMENTED OUT FOLLOWING MIGRATION TO UNITY CATALOG (KOALAS DEPRECATED AND FOLDED INTO PYSPARK)
+  import pyspark.pandas as ps # 20251009 - ADDED
   import pandas as pd
   
   #Not sure why this list comprehension is used instead of 
@@ -93,9 +91,11 @@ def count_var(df, var1: str, ret=0, df_desc='', indx=0) -> None:
   
   # If a koalas dataframe is passed to the function, it will be converted
   # to a spark DataFrame. Is importing koalas is redundant?
-  if isinstance(df, ks.DataFrame):
+  # if isinstance(df, ks.DataFrame): # 20251009 - COMMENTED OUT FOLLOWING MIGRATION TO UNITY CATALOG (KOALAS DEPRECATED AND FOLDED INTO PYSPARK)
+  #   df = df.to_spark()
+  if isinstance(df, ps.DataFrame): # 20251009 - ADDED
     df = df.to_spark()
-    
+
   if isinstance(df, pd.DataFrame): 
     dftype = 'pandas'
     var1type = df[var1].dtype.name
@@ -176,7 +176,7 @@ def count_var(df, var1: str, ret=0, df_desc='', indx=0) -> None:
 def count_varlist(df, varlist): 
   
   import pyspark.sql.functions as f
-  import databricks.koalas as ks
+  # import databricks.koalas as ks # 20251009 - COMMENTED OUT FOLLOWING MIGRATION TO UNITY CATALOG (KOALAS DEPRECATED AND FOLDED INTO PYSPARK) # NOT USED
   import pandas as pd
   
   dfname = [x for x in globals() if globals()[x] is df]
@@ -218,7 +218,8 @@ def count_varlist(df, varlist):
 
 def tab(df, var1, var2=None, var2_wide=1, var2_unstyled=1, cumsum=0):
   import pyspark.sql.functions as f 
-  import pyspark.pandas as ps
+  # import databricks.koalas as ks # 20251009 - COMMENTED OUT FOLLOWING MIGRATION TO UNITY CATALOG (KOALAS DEPRECATED AND FOLDED INTO PYSPARK)
+  import pyspark.pandas as ps # 20251009 - ADDED  
   import pandas as pd
   import numpy as np
   
@@ -229,10 +230,14 @@ def tab(df, var1, var2=None, var2_wide=1, var2_unstyled=1, cumsum=0):
   if isinstance(df, pd.DataFrame): 
     dftype = 'pandas'
     var1type = df[var1].dtype.name
-  elif isinstance(df, ps.DataFrame):
+  # elif isinstance(df, ks.DataFrame): # 20251009 - COMMENTED OUT FOLLOWING MIGRATION TO UNITY CATALOG (KOALAS DEPRECATED AND FOLDED INTO PYSPARK)
+  #   df = df.to_spark()
+  #   dftype = 'spark'
+  #   var1type = df.schema[var1].dataType   
+  elif isinstance(df, ps.DataFrame): # 20251009 - ADDED
     df = df.to_spark()
     dftype = 'spark'
-    var1type = df.schema[var1].dataType   
+    var1type = df.schema[var1].dataType    
   else: 
     dftype = 'spark'
     var1type = df.schema[var1].dataType
@@ -1007,6 +1012,8 @@ def code_match(_dict, _name_prefix):
 
 # COMMAND ----------
 
+## 2025-10-24 UPDATED CODELIST_MATCH() function due to errors being returned (since migration to Unity catalog?) due to the reduce() function. In this version, the reduce() function has been replaced with a for loop
+## 2025-11-18 Suggestion to assert codelist dataframe is a spark datafram type and columns 'name', 'code', 'term', 'terminology' are in the codelist dataframe
 def codelist_match(_dict, _name_prefix, _last_event=0, broadcast:int = 0):
 
   print('--------------------------------------------------------------------------------------', flush=True)
@@ -1026,6 +1033,13 @@ def codelist_match(_dict, _name_prefix, _last_event=0, broadcast:int = 0):
     _codelist = _dict[key][1]
     _order = _dict[key][2]
     print(i, key, _data, _codelist, _order)
+
+    #from pyspark.sql import DataFrame as SparkDataframe
+    #_tmp_codelist = globals()[_codelist]
+    #assert isinstance(_tmp_codelist,  SparkDataframe), f'codelist is of type {type(_tmp_codelist)}, it must be a SparkDataframe.'
+    #required_codelist_columns = ["name", "code", "term", 'terminology']
+    #missing = [col for col in required_codelist_columns if col not in _tmp_codelist.columns]
+    #assert not missing, f"Missing columns needed in codelist dataframe: {missing}"
 
     # get codelist
     _tmp_codelist = globals()[_codelist]\
@@ -1057,10 +1071,21 @@ def codelist_match(_dict, _name_prefix, _last_event=0, broadcast:int = 0):
   
   # append
   print(f'\nappend codelist matches from different sources/terminologies')
-  _codelist_all = reduce(DataFrame.unionByName, _dict_codelist.values())  
-  _codematch_all = reduce(DataFrame.unionByName, _dict_codematch.values()) 
-  _dict_codematch['all'] = _codematch_all
+  _codelist_all = None
+  for df in _dict_codelist.values():
+      if _codelist_all is None:
+          _codelist_all = df
+      else:
+           _codelist_all = _codelist_all.unionByName(df)
+    
+  _codematch_all = None
+  for df in _dict_codematch.values():
+      if _codematch_all is None:
+          _codematch_all = df
+      else:
+          _codematch_all = _codematch_all.unionByName(df)
   
+  _dict_codematch['all'] = _codematch_all
   # ------------------------------------------------------------------------------------
   # first/last event of each name
   # ------------------------------------------------------------------------------------
@@ -1140,7 +1165,8 @@ def codelist_match(_dict, _name_prefix, _last_event=0, broadcast:int = 0):
 # COMMAND ----------
 
 # 20230126 testing option for stages to run
-def codelist_match_stages_to_run(_dict, _name_prefix, _last_event=0, broadcast:int = 0, stages_to_run:int = 3):
+# 2025-10-24 UPDATED CODELIST_MATCH() function due to errors being returned (since migration to Unity catalog?) due to the reduce() function. In this version, the reduce() function has been replaced with a for loop
+def codelist_match_stages_to_run(_dict, _name_prefix, _last_event=0, broadcast:int = 0, keep_date_naming=True, stages_to_run:int = 3):
 
   print('--------------------------------------------------------------------------------------', flush=True)
   print('codelist_match', flush=True)
@@ -1193,10 +1219,21 @@ def codelist_match_stages_to_run(_dict, _name_prefix, _last_event=0, broadcast:i
   
   # append
   print(f'\nappend codelist matches from different sources/terminologies')
-  _codelist_all = reduce(DataFrame.unionByName, _dict_codelist.values())  
-  _codematch_all = reduce(DataFrame.unionByName, _dict_codematch.values()) 
+  _codelist_all = None
+  for df in _dict_codelist.values():
+      if _codelist_all is None:
+          _codelist_all = df
+      else:
+          _codelist_all = _codelist_all.unionByName(df)
+      
+  _codematch_all = None
+  for df in _dict_codematch.values():
+      if _codematch_all is None:
+          _codematch_all = df
+      else:
+          _codematch_all = _codematch_all.unionByName(df)
+    
   _dict_codematch['all'] = _codematch_all
-  
   
   # ------------------------------------------------------------------------------------
   # first/last event of each name
@@ -1262,177 +1299,8 @@ def codelist_match_stages_to_run(_dict, _name_prefix, _last_event=0, broadcast:i
       .where(f.col('PERSON_ID').isNotNull())\
       .orderBy('PERSON_ID')  
 
-    # add flag and date columns
-    print(f'add flag and date')
-    vlist = []
-    for i, v in enumerate([col for col in list(_codematch_1st_wide.columns) if re.match(f'^{_name_prefix}', col)]):
-      print(' ' , i, v)
-      _codematch_1st_wide = _codematch_1st_wide\
-        .withColumnRenamed(v, v + '_date')\
-        .withColumn(v + '_flag', f.when(f.col(v + '_date').isNotNull(), 1))
-      vlist = vlist + [v + '_flag', v + '_date']
-    _codematch_1st_wide = _codematch_1st_wide\
-      .select(['PERSON_ID', 'CENSOR_DATE_START', 'CENSOR_DATE_END'] + vlist)    
-    
-  # ------------------------------------------------------------------------------------
-  # return
-  # ------------------------------------------------------------------------------------    
-  if(stages_to_run == 1): return _dict_codematch  
-  elif(stages_to_run == 2): return _dict_codematch, _codematch_1st  
-  elif(stages_to_run == 3): return _dict_codematch, _codematch_1st, _codematch_1st_wide
-
-# COMMAND ----------
-
-# 20230102 - testing different union method to allow more columns to be retained
-# 20230107 - testing dict of dict (cf. dict of list) input
-
-def codelist_match_v2_test(_dict, _name_prefix, _last_event=0, broadcast=0, codelist_cols=None, stages_to_run:int = 3):
-
-  print('--------------------------------------------------------------------------------------', flush=True)
-  print('codelist_match', flush=True)
-  print('--------------------------------------------------------------------------------------', flush=True)
-  print(f'_name_prefix = {_name_prefix}'); print()
-  
-  # check stages_to_run
-  assert stages_to_run in [1,2,3], 'stages_to_run is not in [1,2,3]'  
-  
-  # initialise
-  _dict_codelist = {}
-  _dict_codematch = {}
-  
-  # loop over data sources
-  for i, key in enumerate(_dict):
-    # extract elements from the dictionary entry 
-    # (dataset, codelist, ordering [in the event of tied matches on date from different sources])
-    _data = _dict[key][0]
-    _codelist = _dict[key][1]
-    _order = _dict[key][2]
-    print(i, key, _data, _codelist, _order)
-
-    # get codelist
-    _codelist_cols = ['code', 'name']
-    if(codelist_cols != None): _codelist_cols = _codelist_cols + codelist_cols
-    _tmp_codelist = globals()[_codelist]\
-      .select(_codelist_cols)
-    
-    # ------------------------------------------------------------------------------------
-    # match the dataset and codelist
-    # ------------------------------------------------------------------------------------
-    print(f'  codelist match')
-    if(broadcast == 0):
-      # without broadcast
-      _tmp_codematch = globals()[_data]\
-        .join(_tmp_codelist, on='code', how='inner')
-    elif(broadcast == 1):
-      # with broadcast
-      _tmp_codematch = globals()[_data]\
-        .join(f.broadcast(_tmp_codelist), on='code', how='inner')
-    else: ValueError("'broadcast' should take values: 0 or 1") 
-    
-    # add source and order
-    _tmp_codematch = _tmp_codematch\
-      .withColumn('source', f.lit(key))\
-      .withColumn('sourcen', f.lit(_order))
-    
-    # store the results
-    _dict_codelist[key] = _tmp_codelist
-    _dict_codematch[key] = _tmp_codematch
-  
-    # append for all
-    if(i == 0):
-      _codematch_all = _tmp_codematch
-    else:
-      # before union
-      # add columns to the master that are in the component but not in the master
-      for col in [col for col in _tmp_codematch.columns if col not in _codematch_all.columns]:
-        print('  adding column found in tmp to master: ' + col)
-        _codematch_all = _codematch_all\
-          .withColumn(col, f.lit(None))
-      # add columns to the component that are in the master but not in the component
-      for col in [col for col in _codematch_all.columns if col not in _tmp_codematch.columns]:
-        print('  adding column found in master to tmp: ' + col)
-        _tmp_codematch = _tmp_codematch\
-          .withColumn(col, f.lit(None))
-
-      # union  
-      _codematch_all = _codematch_all\
-        .unionByName(_tmp_codematch)
-  
-  # append
-  print(f'\nappend codelist matches from different sources/terminologies')
-  _codelist_all = reduce(DataFrame.unionByName, _dict_codelist.values())  
-  # commented out the line below as undertaken manually above to allow flexibility on appending new columns
-  # _codematch_all = reduce(DataFrame.unionByName, _dict_codematch.values())   
-  _dict_codematch['all'] = _codematch_all
-  
-  if(stages_to_run == 3):
-
-    # ------------------------------------------------------------------------------------
-    # first/last event of each name
-    # ------------------------------------------------------------------------------------
-    if(stages_to_run in [2,3]):
-      if(_last_event == 1):
-        print(f'filter to LAST event')
-        _win = Window\
-          .partitionBy(['PERSON_ID', 'name'])\
-          .orderBy(f.desc('DATE'), 'sourcen', 'code')      
-      else:
-        print(f'filter to 1st event')
-        _win = Window\
-          .partitionBy(['PERSON_ID', 'name'])\
-          .orderBy('DATE', 'sourcen', 'code')  
-
-      # filter
-      _codematch_1st = _codematch_all\
-        .withColumn('_rownum', f.row_number().over(_win))\
-        .where(f.col('_rownum') == 1)\
-        .select('PERSON_ID', 'CENSOR_DATE_START', 'CENSOR_DATE_END', 'DATE', 'name', 'source', 'code')\
-        .orderBy('PERSON_ID', 'DATE', 'name')
-
-      # ------------------------------------------------------------------------------------
-      # identify ties by source for first event of each name
-      # ------------------------------------------------------------------------------------
-      print(f'identify ties from sources/terminologies for first (/last) event')
-
-      _codematch_1st_tie_source = _codematch_all\
-        .withColumn('_tie', f.dense_rank().over(_win))\
-        .where(f.col('_tie') == 1)\
-        .groupBy('PERSON_ID', 'name')\
-        .agg(\
-          f.countDistinct(f.col('source')).alias(f'_n_distinct_source')\
-          , f.countDistinct(f.when(f.col('source').isNull(), 1)).alias(f'_null_source')\
-          , f.sort_array(f.collect_set(f.col('source'))).alias('_tie_source_list')\
-        )\
-        .withColumn('_tie_source', f.when((f.col('_n_distinct_source') + f.col(f'_null_source')) > 1, 1).otherwise(0))\
-        .select('PERSON_ID', 'name', '_tie_source', '_tie_source_list')
-
-      _codematch_1st = _codematch_1st\
-        .join(_codematch_1st_tie_source, on=['PERSON_ID', 'name'], how='left')
-
-      
-    # ------------------------------------------------------------------------------------
-    # reshape
-    # ------------------------------------------------------------------------------------
-    if(stages_to_run == 3):
-      print(f'reshape long to wide')
-
-      # join codelist names before reshape to ensure all covariates are created (when no code matches are found)
-      _codelist_all = _codelist_all\
-        .select('name')\
-        .distinct() 
-
-      # reshape long to wide  
-      _codematch_1st_wide = _codematch_1st\
-        .drop('code')\
-        .join(_codelist_all, on='name', how='outer')\
-        .withColumn('name', f.concat(f.lit(f'{_name_prefix}'), f.lower(f.col('name'))))\
-        .groupBy('PERSON_ID', 'CENSOR_DATE_START', 'CENSOR_DATE_END')\
-        .pivot('name')\
-        .agg(f.first('DATE'))\
-        .where(f.col('PERSON_ID').isNotNull())\
-        .orderBy('PERSON_ID')  
-
-      # add flag and date columns
+    if keep_date_naming:
+    #add flag and date columns
       print(f'add flag and date')
       vlist = []
       for i, v in enumerate([col for col in list(_codematch_1st_wide.columns) if re.match(f'^{_name_prefix}', col)]):
@@ -1443,16 +1311,190 @@ def codelist_match_v2_test(_dict, _name_prefix, _last_event=0, broadcast=0, code
         vlist = vlist + [v + '_flag', v + '_date']
       _codematch_1st_wide = _codematch_1st_wide\
         .select(['PERSON_ID', 'CENSOR_DATE_START', 'CENSOR_DATE_END'] + vlist)    
-
-  
-
+    else:
+      pass
+    
   # ------------------------------------------------------------------------------------
   # return
   # ------------------------------------------------------------------------------------    
-  # return _dict_codematch, _codematch_1st, _codematch_1st_wide
   if(stages_to_run == 1): return _dict_codematch  
-  # elif(stages_to_run == 2): return _dict_codematch, _codematch_1st  
+  elif(stages_to_run == 2): return _dict_codematch, _codematch_1st  
   elif(stages_to_run == 3): return _dict_codematch, _codematch_1st, _codematch_1st_wide
+
+# COMMAND ----------
+
+# # 20230102 - testing different union method to allow more columns to be retained
+# # 20230107 - testing dict of dict (cf. dict of list) input
+
+# def codelist_match_v2_test(_dict, _name_prefix, _last_event=0, broadcast=0, codelist_cols=None,  _remove_date_naming:True, stages_to_run:int = 3):
+
+#   print('--------------------------------------------------------------------------------------', flush=True)
+#   print('codelist_match', flush=True)
+#   print('--------------------------------------------------------------------------------------', flush=True)
+#   print(f'_name_prefix = {_name_prefix}'); print()
+  
+#   # check stages_to_run
+#   assert stages_to_run in [1,2,3], 'stages_to_run is not in [1,2,3]'  
+  
+#   # initialise
+#   _dict_codelist = {}
+#   _dict_codematch = {}
+  
+#   # loop over data sources
+#   for i, key in enumerate(_dict):
+#     # extract elements from the dictionary entry 
+#     # (dataset, codelist, ordering [in the event of tied matches on date from different sources])
+#     _data = _dict[key][0]
+#     _codelist = _dict[key][1]
+#     _order = _dict[key][2]
+#     print(i, key, _data, _codelist, _order)
+
+#     # get codelist
+#     _codelist_cols = ['code', 'name']
+#     if(codelist_cols != None): _codelist_cols = _codelist_cols + codelist_cols
+#     _tmp_codelist = globals()[_codelist]\
+#       .select(_codelist_cols)
+    
+#     # ------------------------------------------------------------------------------------
+#     # match the dataset and codelist
+#     # ------------------------------------------------------------------------------------
+#     print(f'  codelist match')
+#     if(broadcast == 0):
+#       # without broadcast
+#       _tmp_codematch = globals()[_data]\
+#         .join(_tmp_codelist, on='code', how='inner')
+#     elif(broadcast == 1):
+#       # with broadcast
+#       _tmp_codematch = globals()[_data]\
+#         .join(f.broadcast(_tmp_codelist), on='code', how='inner')
+#     else: ValueError("'broadcast' should take values: 0 or 1") 
+    
+#     # add source and order
+#     _tmp_codematch = _tmp_codematch\
+#       .withColumn('source', f.lit(key))\
+#       .withColumn('sourcen', f.lit(_order))
+    
+#     # store the results
+#     _dict_codelist[key] = _tmp_codelist
+#     _dict_codematch[key] = _tmp_codematch
+  
+#     # append for all
+#     if(i == 0):
+#       _codematch_all = _tmp_codematch
+#     else:
+#       # before union
+#       # add columns to the master that are in the component but not in the master
+#       for col in [col for col in _tmp_codematch.columns if col not in _codematch_all.columns]:
+#         print('  adding column found in tmp to master: ' + col)
+#         _codematch_all = _codematch_all\
+#           .withColumn(col, f.lit(None))
+#       # add columns to the component that are in the master but not in the component
+#       for col in [col for col in _codematch_all.columns if col not in _tmp_codematch.columns]:
+#         print('  adding column found in master to tmp: ' + col)
+#         _tmp_codematch = _tmp_codematch\
+#           .withColumn(col, f.lit(None))
+
+#       # union  
+#       _codematch_all = _codematch_all\
+#         .unionByName(_tmp_codematch)
+  
+#   # append
+#   print(f'\nappend codelist matches from different sources/terminologies')
+#   _codelist_all = reduce(DataFrame.unionByName, _dict_codelist.values())  
+#   # commented out the line below as undertaken manually above to allow flexibility on appending new columns
+#   # _codematch_all = reduce(DataFrame.unionByName, _dict_codematch.values())   
+#   _dict_codematch['all'] = _codematch_all
+  
+#   if(stages_to_run == 3):
+
+#     # ------------------------------------------------------------------------------------
+#     # first/last event of each name
+#     # ------------------------------------------------------------------------------------
+#     if(stages_to_run in [2,3]):
+#       if(_last_event == 1):
+#         print(f'filter to LAST event')
+#         _win = Window\
+#           .partitionBy(['PERSON_ID', 'name'])\
+#           .orderBy(f.desc('DATE'), 'sourcen', 'code')      
+#       else:
+#         print(f'filter to 1st event')
+#         _win = Window\
+#           .partitionBy(['PERSON_ID', 'name'])\
+#           .orderBy('DATE', 'sourcen', 'code')  
+
+#       # filter
+#       _codematch_1st = _codematch_all\
+#         .withColumn('_rownum', f.row_number().over(_win))\
+#         .where(f.col('_rownum') == 1)\
+#         .select('PERSON_ID', 'CENSOR_DATE_START', 'CENSOR_DATE_END', 'DATE', 'name', 'source', 'code')\
+#         .orderBy('PERSON_ID', 'DATE', 'name')
+
+#       # ------------------------------------------------------------------------------------
+#       # identify ties by source for first event of each name
+#       # ------------------------------------------------------------------------------------
+#       print(f'identify ties from sources/terminologies for first (/last) event')
+
+#       _codematch_1st_tie_source = _codematch_all\
+#         .withColumn('_tie', f.dense_rank().over(_win))\
+#         .where(f.col('_tie') == 1)\
+#         .groupBy('PERSON_ID', 'name')\
+#         .agg(\
+#           f.countDistinct(f.col('source')).alias(f'_n_distinct_source')\
+#           , f.countDistinct(f.when(f.col('source').isNull(), 1)).alias(f'_null_source')\
+#           , f.sort_array(f.collect_set(f.col('source'))).alias('_tie_source_list')\
+#         )\
+#         .withColumn('_tie_source', f.when((f.col('_n_distinct_source') + f.col(f'_null_source')) > 1, 1).otherwise(0))\
+#         .select('PERSON_ID', 'name', '_tie_source', '_tie_source_list')
+
+#       _codematch_1st = _codematch_1st\
+#         .join(_codematch_1st_tie_source, on=['PERSON_ID', 'name'], how='left')
+
+      
+#     # ------------------------------------------------------------------------------------
+#     # reshape
+#     # ------------------------------------------------------------------------------------
+#     if(stages_to_run == 3):
+#       print(f'reshape long to wide')
+
+#       # join codelist names before reshape to ensure all covariates are created (when no code matches are found)
+#       _codelist_all = _codelist_all\
+#         .select('name')\
+#         .distinct() 
+
+#       # reshape long to wide  
+#       _codematch_1st_wide = _codematch_1st\
+#         .drop('code')\
+#         .join(_codelist_all, on='name', how='outer')\
+#         .withColumn('name', f.concat(f.lit(f'{_name_prefix}'), f.lower(f.col('name'))))\
+#         .groupBy('PERSON_ID', 'CENSOR_DATE_START', 'CENSOR_DATE_END')\
+#         .pivot('name')\
+#         .agg(f.first('DATE'))\
+#         .where(f.col('PERSON_ID').isNotNull())\
+#         .orderBy('PERSON_ID')  
+      
+#       if _remove_date_naming:
+#         #add flag and date columns
+#         print(f'add flag and date')
+#         vlist = []
+#         for i, v in enumerate([col for col in list(_codematch_1st_wide.columns) if re.match(f'^{_name_prefix}', col)]):
+#           print(' ' , i, v)
+#           _codematch_1st_wide = _codematch_1st_wide\
+#             .withColumnRenamed(v, v + '_date')\
+#             .withColumn(v + '_flag', f.when(f.col(v + '_date').isNotNull(), 1))
+#           vlist = vlist + [v + '_flag', v + '_date']
+#         _codematch_1st_wide = _codematch_1st_wide\
+#           .select(['PERSON_ID', 'CENSOR_DATE_START', 'CENSOR_DATE_END'] + vlist)    
+#       else:
+#         pass
+  
+
+#   # ------------------------------------------------------------------------------------
+#   # return
+#   # ------------------------------------------------------------------------------------    
+#   # return _dict_codematch, _codematch_1st, _codematch_1st_wide
+#   if(stages_to_run == 1): return _dict_codematch  
+#   # elif(stages_to_run == 2): return _dict_codematch, _codematch_1st  
+#   elif(stages_to_run == 3): return _dict_codematch, _codematch_1st, _codematch_1st_wide
 
 # COMMAND ----------
 
@@ -1552,6 +1594,21 @@ def codelist_match_summ(_dict_codelist, _dict_codematch):
 # COMMAND ----------
 
 def table_summ(_path, _name, _convarlist=[], _idvarlist=[]):
+  """
+  Add what the fucntion does
+
+    Args:
+      _path
+      _name
+      _convarlist=[]
+      _idvarlist=[]
+
+    Returns:
+      Don't know
+
+    Raises:
+      Nothing
+  """
   print(_path)
   
   # get table  
@@ -1848,7 +1905,7 @@ def drop_table(table_name:str, database_name:str='dars_nic_391419_j3w9t_collab',
 
 # COMMAND ----------
 
-def temp_save(df, out_name:str, _dbc:str=f'dsa_391419_j3w9t_collab'):
+def temp_save(df, out_name:str, _dbc:str=f'dsa_391419_j3w9t_collab', quietly=False):
   
   spark.conf.set('spark.sql.legacy.allowCreatingManagedTableUsingNonemptyLocation', 'true')
   
@@ -1856,16 +1913,16 @@ def temp_save(df, out_name:str, _dbc:str=f'dsa_391419_j3w9t_collab'):
   if(len(dfname) == 1): dfname = dfname[0]
   else: dfname = "unknown dfname (not in globals())"      
   
-  print(f'saving {dfname} to {_dbc}.{out_name}')
+  if quietly == False: print(f'saving {dfname} to {_dbc}.{out_name}')
   if(out_name != out_name.lower()):
     out_name_old = out_name
     out_name == out_name.lower()
-    print(f'  out_name changed to lower case (from {out_name_old} to {out_name})')
+    if quietly == False: print(f'  out_name changed to lower case (from {out_name_old} to {out_name})')
     
   # save  
-  df.write.mode('overwrite').saveAsTable(f'{_dbc}.{out_name}')
+  df.write.mode('overwrite').option("overwriteSchema", "true").saveAsTable(f'{_dbc}.{out_name}')
   # spark.sql(f'ALTER TABLE {_dbc}.{out_name} OWNER TO {_dbc}')
-  print(f'  saved')
+  if quietly == False: print(f'  saved')
   
   # repoint
   spark.sql(f'REFRESH TABLE {_dbc}.{out_name}')
@@ -2201,7 +2258,7 @@ def table_summ(_data, _convarlist=[], _idvarlist=[], _sdc=False, _name=''):
   
   
   Status:
-    In testing stage 1 - see /Workspaces/dars_nic_391419_j3w9t_collab/SHDS/Fionna/Function Testing/table_summ
+    In testing stage 1 - see /Workspaces/dars_nic_391419_j3w9t_collab/SHDS/Fionna/Function Testing/table_summ_test
     
   Further Development:
     - The categorical variables value frequencies table produced is yet to have sdc formatting applied.
@@ -2677,3 +2734,59 @@ def extract_batch_from_archive(_df_datasets: DataFrame, _dataset: str):
 
   # return dataframe
   return _tmp
+
+# COMMAND ----------
+
+# extract_batch_from_archive_test - added code for input dataframe to be a pandas dataframe not only a spark dataframe - testing
+
+# Updated function that compares the number of rows expected (the number that were found when running the parameters notebook in full) against the number of rows observed (the number that were found when extracting the data from the archive in a subsequent notebook). This would alert us to the number of rows being changed in the archive tables, which the data wranglers control.
+
+# function to extract the batch corresponding to the pre-defined archived_on date - will be used in subsequent notebooks
+import pandas as pd
+from pyspark.sql import DataFrame
+def extract_batch_from_archive_test(_df_datasets: DataFrame, _dataset: str):
+  
+  # get row from df_archive_tables corresponding to the specified dataset
+  _row = _df_datasets[_df_datasets['dataset'] == _dataset]
+
+  if isinstance(_df_datasets, pd.DataFrame): 
+    pass
+  else:
+    _row = _row.toPandas()    
+  
+  # check one row only
+  assert _row.shape[0] != 0, f"dataset = {_dataset} not found in _df_datasets (datasets = {_df_datasets['dataset'].tolist()})"
+  assert _row.shape[0] == 1, f"dataset = {_dataset} has >1 row in _df_datasets"
+  
+  # create path and extract archived on
+  _row = _row.iloc[0]
+  _path = _row['database'] + '.' + _row['table']  
+
+  if isinstance(_df_datasets, pd.DataFrame): 
+    _archived_on = _row['archived_on']
+  else:
+    _archived_on = _row['archived_on'].strftime('%Y-%m-%d')
+
+  if "n" in _row.index:
+    _n_rows_expected = _row['n']  
+    print(_path + ' (archived_on = ' + _archived_on + ', n_rows_expected = ' + _n_rows_expected + ')')
+  
+  # check path exists # commented out for runtime
+#   _tmp_exists = spark.sql(f"SHOW TABLES FROM {_row['database']}")\
+#     .where(f.col('tableName') == _row['table'])\
+#     .count()
+#   assert _tmp_exists == 1, f"path = {_path} not found"
+
+  # extract batch
+  _tmp = spark.table(_path)\
+    .where(f.col('archived_on') == _archived_on)  
+  
+  # check number of records returned
+  _n_rows_observed = _tmp.count()
+  print(f'  n_rows_observed = {_n_rows_observed:,}')
+  assert _n_rows_observed > 0, f"_n_rows_observed == 0"
+  if "n" in _row.index:
+    assert f'{_n_rows_observed:,}' == _n_rows_expected, f"_n_rows_observed != _n_rows_expected ({_n_rows_observed:,} != {_n_rows_expected})"
+
+  # return dataframe
+  return _tmp  
