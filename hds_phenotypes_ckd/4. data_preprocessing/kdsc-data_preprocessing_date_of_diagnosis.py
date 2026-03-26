@@ -3,7 +3,7 @@
 # MAGIC %md
 # MAGIC # Data Preprocessing - Date of Diagnosis
 # MAGIC
-# MAGIC **Description** This notebook curates the date of diagnosis, defined as the first CKD code (of any type) or the second eGFR â‰¤90 (at least 90 days after the first)
+# MAGIC **Description** This notebook curates the date of diagnosis, defined as the first CKD code (of any type) or the second eGFR ≤90 (at least 90 days after the first)
 # MAGIC
 # MAGIC **Author(s)** Anna Stevenson (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
@@ -12,7 +12,7 @@
 # MAGIC **Acknowledgements** Based on ddsc-data_preprocessing_date_of_diagnosis (Fionna Chalmers)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_data_preprocessing_date_of_diagnosis`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_data_preprocessing_date_of_diagnosis`**
 
 # COMMAND ----------
 
@@ -54,11 +54,11 @@ import seaborn as sns
 
 # COMMAND ----------
 
-ckd = spark.table(f'{dsa}.{proj}_kdsc_data_preprocessing_ckd_{algorithm_timestamp}')
+ckd = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_ckd_{algorithm_timestamp}')
 
 # COMMAND ----------
 
-egfr = spark.table(f'{dsa}.{proj}_kdsc_data_preprocessing_egfr_{algorithm_timestamp}')
+egfr = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_egfr_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -88,4 +88,9 @@ date_of_diagnosis = (
 
 # COMMAND ----------
 
-save_table(df=date_of_diagnosis, out_name=f'{proj}_kdsc_data_preprocessing_date_of_diagnosis_{algorithm_timestamp}', save_previous=False)
+# MAGIC %md
+# MAGIC # Save
+
+# COMMAND ----------
+
+save_table(df=date_of_diagnosis, out_name=f'{proj}_kdsc_{algorithm_version}_data_preprocessing_date_of_diagnosis_{algorithm_timestamp}', save_previous=False)

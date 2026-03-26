@@ -6,7 +6,7 @@
 # MAGIC **Description** This notebook curates the CKD cohort in which a person is included if they have:
 # MAGIC
 # MAGIC - at least one CKD code form primary or secondary care
-# MAGIC - have at least 2 eGFR â‰¤90 at least 90 days apart
+# MAGIC - have at least 2 eGFR ≤90 at least 90 days apart
 # MAGIC - flag if they ever have a congenital, transplant or dialysis code
 # MAGIC
 # MAGIC All variables derived in the data_preprocessing stage are joined onto the cohort for use in the algorithm.
@@ -18,7 +18,7 @@
 # MAGIC **Reviewers** Jadene Lewis, Laura Sherlock (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_cohort`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_cohort_{algorithm_timestamp}`**
 
 # COMMAND ----------
 
@@ -64,18 +64,18 @@ import seaborn as sns
 
 # COMMAND ----------
 
-egfr_df = spark.table(f'{dsa}.{proj}_kdsc_data_preprocessing_egfr_{algorithm_timestamp}')
+egfr_df = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_egfr_{algorithm_timestamp}')
 
-acr_df = spark.table(f'{dsa}.{proj}_kdsc_data_preprocessing_acr_{algorithm_timestamp}')
+acr_df = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_acr_{algorithm_timestamp}')
 
-ckd_df = spark.table(f'{dsa}.{proj}_kdsc_data_preprocessing_ckd_{algorithm_timestamp}')
+ckd_df = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_ckd_{algorithm_timestamp}')
 
-date_of_diagnosis_df = spark.table(f'{dsa}.{proj}_kdsc_data_preprocessing_date_of_diagnosis_{algorithm_timestamp}')
+date_of_diagnosis_df = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_date_of_diagnosis_{algorithm_timestamp}')
 
 # COMMAND ----------
 
 demographics = (
-    spark.table(f'{dsa}.{proj}_kdsc_curated_assets_demographics_{algorithm_timestamp}')
+    spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
     .select("PERSON_ID",f.col("date_of_birth").alias("DATE_OF_BIRTH"),f.col("date_of_death").alias("DATE_OF_DEATH"),
                             f.col("sex").alias("SEX"),f.col("ethnicity_5_group").alias("ETHNICITY"),"in_gdppr")
 )
@@ -185,4 +185,4 @@ display(cohort)
 
 # COMMAND ----------
 
-save_table(df=cohort, out_name=f'{proj}_kdsc_cohort_{algorithm_timestamp}', save_previous=False)
+save_table(df=cohort, out_name=f'{proj}_kdsc_{algorithm_version}_cohort_{algorithm_timestamp}', save_previous=False)

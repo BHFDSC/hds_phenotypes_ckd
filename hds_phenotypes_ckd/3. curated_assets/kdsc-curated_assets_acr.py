@@ -13,7 +13,7 @@
 # MAGIC **Reviewers** Jadene Lewis, Laura Sherlock (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_curated_assets_acr`** 
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_curated_assets_acr_{algorithm_timestamp}`** 
 
 # COMMAND ----------
 
@@ -87,11 +87,11 @@ acr_codelist = acr_codelist.withColumn("CODE", f.col("CODE").cast("string"))
 
 # COMMAND ----------
 
-gdppr_prepared = spark.table(f'{dsa}.{proj}_kdsc_curated_data_gdppr_{algorithm_timestamp}')
+gdppr_prepared = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_data_gdppr_{algorithm_timestamp}')
 
 # COMMAND ----------
 
-demographics = spark.table(f'{dsa}.{proj}_curated_assets_demographics_{algorithm_timestamp}')
+demographics = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -137,4 +137,4 @@ display(acr_cohort)
 
 # COMMAND ----------
 
-save_table(df=acr_cohort, out_name=f'{proj}_kdsc_curated_assets_acr{algorithm_timestamp}', save_previous=False)
+save_table(df=acr_cohort, out_name=f'{proj}_kdsc_{algorithm_version}_curated_assets_acr_{algorithm_timestamp}', save_previous=False)

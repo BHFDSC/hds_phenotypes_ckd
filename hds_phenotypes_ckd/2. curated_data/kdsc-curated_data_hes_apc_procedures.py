@@ -17,7 +17,7 @@
 # MAGIC **Reviewers** Jadene Lewis, Laura Sherlock (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_curated_data_hes_apc_proc`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_proc_{algorithm_timestamp}`**
 
 # COMMAND ----------
 
@@ -74,7 +74,7 @@ display(hes_apc_proc)
 
 # COMMAND ----------
 
-demographics = spark.table(f'{dsa}.{proj}_kdsc_curated_assets_demographics_{algorithm_timestamp}')
+demographics = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -143,4 +143,4 @@ else:
 
 # COMMAND ----------
 
-save_table(df=hes_apc_proc_formatted, out_name=f'{proj}_kdsc_curated_data_hes_apc_proc{algorithm_timestamp}', save_previous=False)
+save_table(df=hes_apc_proc_formatted, out_name=f'{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_proc_{algorithm_timestamp}', save_previous=False)

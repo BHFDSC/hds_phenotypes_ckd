@@ -17,11 +17,10 @@
 # MAGIC **Notes** This pipeline has an initial production date, set at `pipeline_production_date`, and the `archived_on` dates used for each dataset correspond to the latest (most recent) batch of data before this date. Should the pipeline and all the notebooks that follow need to be updated and rerun, then this notebook should be rerun with an updated `pipeline_production_date`. Note that if a parameters_df_datasets table already exists using your project and pipeline_production_date then the Datasets section of this notebook will be skipped.
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_parameters_df_datasets`**: table of `archived_on` dates for each dataset that can be used consistently throughout the pipeline 
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_parameters_df_datasets_{algorithm_timestamp}`**: table of `archived_on` dates for each dataset that can be used consistently throughout the pipeline 
 
 # COMMAND ----------
 
-# MAGIC %md
 # MAGIC %md
 # MAGIC # 0. Setup
 
@@ -84,15 +83,15 @@ print(proj)
 # Algorithm Version **NOT CURRENTLY VERSIONED**
 # -----------------------------------------------------------------------------
 # select from V1
-# dbutils.widgets.dropdown(
-#     "algorithm_version",
-#     "V1.0", # DEFAULT VALUE e.g. V2.0
-#     ["V1.0", "V2.0", "V2.1", "V2.2"],
-#     "Algorithm Version"
-# )
+dbutils.widgets.dropdown(
+    "algorithm_version",
+    "V2.0", # DEFAULT VALUE e.g. V2.0
+    ["V1.0", "V2.0", "V2.1", "V2.2"],
+    "Algorithm Version"
+)
 
-# algorithm_version = dbutils.widgets.get("algorithm_version")
-# print(algorithm_version)
+algorithm_version = dbutils.widgets.get("algorithm_version")
+print(algorithm_version)
 
 # -----------------------------------------------------------------------------
 # Last Observable Date
@@ -186,21 +185,27 @@ print(algorithm_timestamp)
 
 # COMMAND ----------
 
+algorithm_version = algorithm_version.lower().replace(".", "_")
+print(algorithm_version)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## 3.3 Parameters Table Name
 
 # COMMAND ----------
 
-parameters_df_name = f'{proj}_kdsc_parameters_df_datasets_{algorithm_timestamp}'
+parameters_df_name = f'{proj}_kdsc_{algorithm_version}_parameters_df_datasets_{algorithm_timestamp}'
 
 # COMMAND ----------
 
-try:
-    # Check if table exists already
-    df = spark.table(f'{dsa}.{parameters_df_name}')
-    does_not_exist_toggle = False
-except AnalysisException as e:
-    does_not_exist_toggle = True
+# Check if table already exists
+does_not_exist_toggle = not spark.catalog.tableExists(f"{dsa}.{parameters_df_name}")
+
+if not does_not_exist_toggle:
+    df = spark.table(f"{dsa}.{parameters_df_name}")
+
+print(does_not_exist_toggle)
 
 # COMMAND ----------
 
@@ -221,8 +226,8 @@ print(does_not_exist_toggle)
 datasets = [ 
     ['gdppr',         dbc, f'gdppr_{db}_archive',             'NHS_NUMBER_DEID',                'DATE']  
   , ['hes_apc',       dbc, f'hes_apc_all_years_archive',      'PERSON_ID_DEID',                 'EPISTART']
-  , ['deaths',        dbc, f'deaths_{db}_archive',            'DEC_CONF_NHS_NUMBER_CLEAN_DEID', 'REG_DATE_OF_DEATH']  
-  #, ['hes_apc_otr',   dbc, f'hes_apc_otr_all_years_archive',   'PERSON_ID_DEID',   'EPISTART']          
+  , ['deaths',        dbc, f'deaths_{db}_archive',            'DEC_CONF_NHS_NUMBER_CLEAN_DEID', 'REG_DATE_OF_DEATH']
+  , ['pmeds',         dbc, f'primary_care_meds_{db}_archive', 'Person_ID_DEID',                 'ProcessingPeriodDate']            
 ]
 
 tmp_df_datasets = pd.DataFrame(datasets, columns=['dataset', 'database', 'table', 'id', 'date']).reset_index()
@@ -299,7 +304,6 @@ if(does_not_exist_toggle):
 
 # COMMAND ----------
 
-spark.sql(f'REFRESH TABLE {dsa}.{parameters_df_name}')
 parameters_df_datasets = (
   spark.table(f'{dsa}.{parameters_df_name}')
   .withColumn("archived_on", f.col("archived_on").cast("string"))
@@ -315,8 +319,7 @@ parameters_df_datasets = (
 # COMMAND ----------
 
 batch_name = (
-    spark
-        .sql("show tables in dsa_391419_j3w9t_collab")
+    spark.sql("show tables in dsa_391419_j3w9t_collab")
         .select("tableName")
         .filter("tableName LIKE '%hds_curated_assets__demographics%'")
         .filter(~f.col('tableName').contains('pre'))

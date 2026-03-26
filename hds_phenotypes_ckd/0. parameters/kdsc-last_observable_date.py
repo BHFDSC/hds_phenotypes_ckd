@@ -16,7 +16,7 @@
 # MAGIC **Acknowledgements** Based on ddsc-last_observable_date (Fionna Chalmers)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_parameters_df_last_observable_date`**: table of that contains the last observable date for each dataset used in the algorithm and also the overall last observable date
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_parameters_df_last_observable_date_{algorithm_timestamp}`**: table of that contains the last observable date for each dataset used in the algorithm and also the overall last observable date
 
 # COMMAND ----------
 
@@ -62,14 +62,32 @@ last_observable_flag
 
 # COMMAND ----------
 
-parameters_df_last_observable_date_name = f'{proj}_kdsc_parameters_df_last_observable_date_{algorithm_timestamp}'
+# parameters_df_last_observable_date_name = f'{proj}_kdsc_parameters_df_last_observable_date_{algorithm_timestamp}'
 
-try:
-    # Check if table exists already
-    df = spark.table(f'{dsa}.{parameters_df_last_observable_date_name}')
-    does_not_exist_toggle = False
-except AnalysisException as e:
-    does_not_exist_toggle = True
+# try:
+#     # Check if table exists already
+#     df = spark.table(f'{dsa}.{parameters_df_last_observable_date_name}')
+#     does_not_exist_toggle = False
+# except AnalysisException as e:
+#     does_not_exist_toggle = True
+
+# # If table exists already then the Datasets section of this notebook will be skipped
+# print(does_not_exist_toggle)
+
+# COMMAND ----------
+
+parameters_df_last_observable_date_name = (
+    f"{proj}_kdsc_{algorithm_version}_parameters_df_last_observable_date_{algorithm_timestamp}"
+)
+
+full_table_name = f"{dsa}.{parameters_df_last_observable_date_name}"
+
+does_not_exist_toggle = not spark.catalog.tableExists(full_table_name)
+
+print(does_not_exist_toggle)
+
+if not does_not_exist_toggle:
+    df = spark.table(full_table_name)
 
 # If table exists already then the Datasets section of this notebook will be skipped
 print(does_not_exist_toggle)

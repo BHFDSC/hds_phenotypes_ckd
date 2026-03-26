@@ -19,8 +19,8 @@
 # MAGIC **Reviewers** Jadene Lewis, Laura Sherlock (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
 # MAGIC **Data Output**
-# MAGIC - **`{proj}_kdsc_data_preprocessing_acr_long`**
-# MAGIC - **`{proj}_kdsc_data_preprocessing_acr`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_data_preprocessing_acr_long_{algorithm_timestamp}`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_data_preprocessing_acr_{algorithm_timestamp}`**
 
 # COMMAND ----------
 
@@ -62,11 +62,11 @@ import seaborn as sns
 
 # COMMAND ----------
 
-acr = spark.table(f'{dsa}.{proj}_kdsc_curated_assets_acr{algorithm_timestamp}')
+acr = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_acr_{algorithm_timestamp}')
 
 # COMMAND ----------
 
-demographics = spark.table(f'{dsa}.{proj}_curated_assets_demographics_{algorithm_timestamp}')
+demographics = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -129,4 +129,4 @@ display(most_recent_acr.limit(100))
 
 # COMMAND ----------
 
-save_table(df=most_recent_acr, out_name=f'{proj}_kdsc_data_preprocessing_acr_{algorithm_timestamp}', save_previous=False)
+save_table(df=most_recent_acr, out_name=f'{proj}_kdsc_{algorithm_version}_data_preprocessing_acr_{algorithm_timestamp}', save_previous=False)

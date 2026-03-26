@@ -18,7 +18,7 @@
 # MAGIC **Acknowledgements** Based on ddsc-curated_data_gdppr (Fionna Chalmers)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_curated_data_gdppr`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_curated_data_gdppr_{algorithm_timestamp}`**
 
 # COMMAND ----------
 
@@ -73,7 +73,7 @@ gdppr   = extract_batch_from_archive(parameters_df_datasets, 'gdppr')
 
 # COMMAND ----------
 
-demographics = spark.table(f'{dsa}.{proj}_curated_assets_demographics_{algorithm_timestamp}')
+demographics = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -108,6 +108,10 @@ display(snomed_lookup_clean
 
 # MAGIC %md
 # MAGIC # Curate
+
+# COMMAND ----------
+
+individual_censor_dates_flag
 
 # COMMAND ----------
 
@@ -153,4 +157,4 @@ gdppr_with_lookup = (
 
 # COMMAND ----------
 
-save_table(df=gdppr_with_lookup, out_name=f'{proj}_kdsc_curated_data_gdppr_{algorithm_timestamp}', save_previous=False)
+save_table(df=gdppr_with_lookup, out_name=f'{proj}_kdsc_{algorithm_version}_curated_data_gdppr_{algorithm_timestamp}', save_previous=False)

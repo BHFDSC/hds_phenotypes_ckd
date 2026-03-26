@@ -3,15 +3,15 @@
 # MAGIC %md
 # MAGIC # Data Preprocessing - Creatinine/eGFR cohort
 # MAGIC
-# MAGIC **Description** This notebook curates the creatinine/eGFR cohort in which someone must have at least 2 eGFR â‰¤90 at least 90 days apart.
+# MAGIC **Description** This notebook curates the creatinine/eGFR cohort in which someone must have at least 2 eGFR ≤90 at least 90 days apart.
 # MAGIC
 # MAGIC The following data cleaning/pre-processing has been done:
 # MAGIC - readings before DOB removed
-# MAGIC - remove those who do not have at least 2 consecutive eGFR â‰¤90 readings in their history 
+# MAGIC - remove those who do not have at least 2 consecutive eGFR ≤90 readings in their history 
 # MAGIC
 # MAGIC Feature engineering is then performed to establish the following:
-# MAGIC - If at least 2 consecutive eGFR â‰¤90 (separated by at least 90 days) were ever found in a person's history
-# MAGIC - The date at which the second eGFR â‰¤90 was found in a person's histroy 
+# MAGIC - If at least 2 consecutive eGFR ≤90 (separated by at least 90 days) were ever found in a person's history
+# MAGIC - The date at which the second eGFR ≤90 was found in a person's histroy 
 # MAGIC
 # MAGIC
 # MAGIC
@@ -20,8 +20,8 @@
 # MAGIC **Reviewers** Jadene Lewis, Laura Sherlock (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
 # MAGIC **Data Output**
-# MAGIC - **`{proj}_kdsc_data_preprocessing_creat_egfr_long`**
-# MAGIC - **`{proj}_kdsc_data_preprocessing_creat_egfr`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_data_preprocessing_creat_egfr_long`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_data_preprocessing_creat_egfr`**
 
 # COMMAND ----------
 
@@ -63,11 +63,11 @@ import seaborn as sns
 
 # COMMAND ----------
 
-creatinine_egfr = spark.table(f'{dsa}.{proj}_kdsc_curated_assets_creatinine_egfr{algorithm_timestamp}')
+creatinine_egfr = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr{algorithm_timestamp}')
 
 # COMMAND ----------
 
-demographics = spark.table(f'{dsa}.{proj}_curated_assets_demographics_{algorithm_timestamp}')
+demographics = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -252,4 +252,4 @@ egfr_low.count()
 
 # COMMAND ----------
 
-save_table(df=egfr_low, out_name=f'{proj}_kdsc_data_preprocessing_egfr_{algorithm_timestamp}', save_previous=False)
+save_table(df=egfr_low, out_name=f'{proj}_kdsc_{algorithm_version}_data_preprocessing_egfr_{algorithm_timestamp}', save_previous=False)
