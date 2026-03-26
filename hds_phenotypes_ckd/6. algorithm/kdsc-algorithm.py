@@ -54,7 +54,7 @@ import os
 # COMMAND ----------
 
 # Cohort In
-cohort = spark.table(f'{dsa}.{proj}_kdsc_cohort_{algorithm_timestamp}')
+cohort = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_cohort_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -297,11 +297,11 @@ tab(cohort, "DIALYSIS_EVER")
 
 # COMMAND ----------
 
-save_table(df=cohort, out_name=f'{proj}_cohort_{algorithm_timestamp}', save_previous=False)
+save_table(df=cohort, out_name=f'{proj}_kdsc_{algorithm_version}_cohort_out_{algorithm_timestamp}', save_previous=False)
 
 # COMMAND ----------
 
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_cohort_out_{algorithm_timestamp}")
+# spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_cohort_out_{algorithm_timestamp}")
 
 # COMMAND ----------
 
@@ -311,24 +311,24 @@ spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_cohort_out_{algorithm_timestamp}")
 # COMMAND ----------
 
 
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_curated_assets_demographics_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_curated_assets_ckd_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_curated_assets_creatinine_egfr_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_curated_assets_acr_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_ckd_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_acr_{algorithm_timestamp}")
 
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_curated_data_gdppr_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_curated_data_hes_apc_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_curated_data_hes_apc_procedures_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_data_gdppr_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_procedures_{algorithm_timestamp}")
 
 
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_data_preprocessing_date_of_diagnosis_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_data_preprocessing_ckd_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_data_preprocessing_acr_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_data_preprocessing_creatinine_egfr_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_date_of_diagnosis_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_ckd_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_acr_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_creatinine_egfr_{algorithm_timestamp}")
 
 
 # Tables that remain
-# {proj}_kdsc_parameters_df_datasets
-# {proj}_kdsc_parameters_df_last_observable_date
-# {proj}_kdsc_cohort
-# {proj}_kdsc_cohort_out
+# {proj}_kdsc_{algorithm_version}_parameters_df_datasets_{algorithm_timestamp}
+# {proj}_kdsc_{algorithm_version}_parameters_df_last_observable_date_{algorithm_timestamp}
+# {proj}_kdsc_{algorithm_version}_cohort_{algorithm_timestamp}
+# {proj}_kdsc_{algorithm_version}_cohort_out_{algorithm_timestamp}

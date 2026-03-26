@@ -12,7 +12,7 @@
 # MAGIC **Acknowledgements** based on ddsc-curated_assets_diabetes (Fionna Chalmers)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_curated_assets_ckd`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_curated_assets_ckd_{algorithm_timestamp}`**
 
 # COMMAND ----------
 
@@ -70,9 +70,9 @@ display(ckd_codelist)
 
 # COMMAND ----------
 
-gdppr_prepared = spark.table(f'{dsa}.{proj}_kdsc_curated_data_gdppr_{algorithm_timestamp}')
-hes_apc = spark.table(f'{dsa}.{proj}_kdsc_curated_data_hes_apc_{algorithm_timestamp}')
-hes_apc_proc = spark.table(f'{dsa}.{proj}_kdsc_curated_data_hes_apc_proc{algorithm_timestamp}')
+gdppr_prepared = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_data_gdppr_{algorithm_timestamp}')
+hes_apc = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_{algorithm_timestamp}')
+hes_apc_proc = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_proc_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -83,7 +83,7 @@ hes_apc_proc = spark.table(f'{dsa}.{proj}_kdsc_curated_data_hes_apc_proc{algorit
 
 hes_apc_ckd = (
     ckd_codelist
-    .filter(col("terminology").contains("ICD10"))
+    .filter(f.col("terminology").contains("ICD10"))
     .join(hes_apc,on="CODE",how="inner")
     .select("PERSON_ID",f.col("EPISTART").alias("DATE"), "code", "description", "terminology", "validate", "transplant", "dialysis", "congenital")
     
@@ -123,4 +123,4 @@ display(ckd)
 
 # COMMAND ----------
 
-save_table(df=ckd, out_name=f'{proj}_kdsc_curated_assets_ckd_{algorithm_timestamp}', save_previous=False)
+save_table(df=ckd, out_name=f'{proj}_kdsc_{algorithm_version}_curated_assets_ckd_{algorithm_timestamp}', save_previous=False)

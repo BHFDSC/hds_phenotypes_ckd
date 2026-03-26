@@ -14,7 +14,7 @@
 # MAGIC **Acknowledgements** Based on ddsc-curated_assets_demographics (Fionna Chalmers)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`kdsc_curated_assets_demographics_{algorithm_timestamp}`** 
+# MAGIC - **`kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}`** 
 
 # COMMAND ----------
 
@@ -71,4 +71,4 @@ display(demographics)
 
 # COMMAND ----------
 
-save_table(df=demographics, out_name=f'{proj}_kdsc_curated_assets_demographics_{algorithm_timestamp}', save_previous=False)
+save_table(df=demographics, out_name=f'{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}', save_previous=False)

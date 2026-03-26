@@ -22,7 +22,7 @@
 # MAGIC **Reviewers** Jadene Lewis, Laura Sherlock (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_curated_assets_creatinine_egfr`** 
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr_{algorithm_timestamp}`** 
 
 # COMMAND ----------
 
@@ -97,11 +97,11 @@ creatinine_codelist = creatinine_codelist.withColumn("CODE", f.col("CODE").cast(
 
 # COMMAND ----------
 
-gdppr_prepared = spark.table(f'{dsa}.{proj}_kdsc_curated_data_gdppr_{algorithm_timestamp}')
+gdppr_prepared = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_data_gdppr_{algorithm_timestamp}')
 
 # COMMAND ----------
 
-demographics = spark.table(f'{dsa}.{proj}_curated_assets_demographics_{algorithm_timestamp}')
+demographics = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -226,7 +226,7 @@ creatinine_egfr_cohort = (
 creatinine_egfr_cohort = (
     creatinine_egfr_cohort
     .withColumn('egfr_group',
-                f.when(f.col("egfr_creat") >=90,"â‰¥90")
+                f.when(f.col("egfr_creat") >=90,"≥90")
                  .when((f.col("egfr_creat") >= 60) & (f.col("egfr_creat") <= 89), "60-89")
      .when((f.col("egfr_creat") >= 45) & (f.col("egfr_creat") <= 59), "45-59")
      .when((f.col("egfr_creat") >= 30) & (f.col("egfr_creat") <= 44), "30-44")
@@ -254,4 +254,4 @@ display(creatinine_egfr_cohort)
 
 # COMMAND ----------
 
-save_table(df=creatinine_egfr_cohort, out_name=f'{proj}_kdsc_curated_assets_creatinine_egfr{algorithm_timestamp}', save_previous=False)
+save_table(df=creatinine_egfr_cohort, out_name=f'{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr{algorithm_timestamp}', save_previous=False)

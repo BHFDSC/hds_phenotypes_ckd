@@ -21,7 +21,7 @@
 # MAGIC **Reviewers** Jadene Lewis, Laura Sherlock (Health Data Science Team, BHF Data Science Centre)
 # MAGIC
 # MAGIC **Data Output** 
-# MAGIC - **`{proj}_kdsc_data_preprocessing_ckd_long_{algorithm_timestamp}`**
+# MAGIC - **`{proj}_kdsc_{algorithm_version}_data_preprocessing_ckd_long_{algorithm_timestamp}`**
 # MAGIC - **`{proj}_kdsc_data_preprocessing_ckd_{algorithm_timestamp}`**
 
 # COMMAND ----------
@@ -64,11 +64,11 @@ import seaborn as sns
 
 # COMMAND ----------
 
-ckd_codes = spark.table(f'{dsa}.{proj}_kdsc_curated_assets_ckd_{algorithm_timestamp}')
+ckd_codes = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_ckd_{algorithm_timestamp}')
 
 # COMMAND ----------
 
-demographics = spark.table(f'{dsa}.{proj}_curated_assets_demographics_{algorithm_timestamp}')
+demographics = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_demographics_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -176,7 +176,8 @@ ckd_cleaned_validated = ckd_cleaned_validated.withColumn(
     f.when(
         f.regexp_extract(f.col("description"), regex, 1) != "",
         f.concat(f.lit("Stage "), f.regexp_extract("description", regex, 1))
-    ).otherwise(None)
+    ).when(f.col('code') == 'N180', "Stage 5") # add N180 to stage 5
+    .otherwise(None)
 )
 
 # COMMAND ----------
@@ -255,7 +256,7 @@ ckd_wrangled = (
 
 # COMMAND ----------
 
-save_table(df=ckd_wrangled, out_name=f'{proj}_kdsc_data_preprocessing_ckd_{algorithm_timestamp}', save_previous=False)
+save_table(df=ckd_wrangled, out_name=f'{proj}_kdsc_{algorithm_version}_data_preprocessing_ckd_{algorithm_timestamp}', save_previous=False)
 
 
 # COMMAND ----------
