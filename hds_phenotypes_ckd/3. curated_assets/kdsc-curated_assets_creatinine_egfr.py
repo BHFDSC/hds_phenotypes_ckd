@@ -254,4 +254,4 @@ display(creatinine_egfr_cohort)
 
 # COMMAND ----------
 
-save_table(df=creatinine_egfr_cohort, out_name=f'{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr{algorithm_timestamp}', save_previous=False)
+save_table(df=creatinine_egfr_cohort, out_name=f'{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr_{algorithm_timestamp}', save_previous=False)

@@ -318,7 +318,7 @@ spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_a
 
 spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_data_gdppr_{algorithm_timestamp}")
 spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_{algorithm_timestamp}")
-spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_procedures_{algorithm_timestamp}")
+spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_curated_data_hes_apc_proc_{algorithm_timestamp}")
 
 
 spark.sql(f"DROP TABLE IF EXISTS {dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_date_of_diagnosis_{algorithm_timestamp}")
