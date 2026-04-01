@@ -63,7 +63,7 @@ import seaborn as sns
 
 # COMMAND ----------
 
-creatinine_egfr = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr{algorithm_timestamp}')
+creatinine_egfr = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_curated_assets_creatinine_egfr_{algorithm_timestamp}')
 
 # COMMAND ----------
 
@@ -252,4 +252,4 @@ egfr_low.count()
 
 # COMMAND ----------
 
-save_table(df=egfr_low, out_name=f'{proj}_kdsc_{algorithm_version}_data_preprocessing_egfr_{algorithm_timestamp}', save_previous=False)
+save_table(df=egfr_low, out_name=f'{proj}_kdsc_{algorithm_version}_data_preprocessing_creatinine_egfr_{algorithm_timestamp}', save_previous=False)

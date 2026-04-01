@@ -64,7 +64,7 @@ import seaborn as sns
 
 # COMMAND ----------
 
-egfr_df = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_egfr_{algorithm_timestamp}')
+egfr_df = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_creatinine_egfr_{algorithm_timestamp}')
 
 acr_df = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_acr_{algorithm_timestamp}')
 
