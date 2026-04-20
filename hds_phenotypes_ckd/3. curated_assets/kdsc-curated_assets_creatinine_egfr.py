@@ -225,6 +225,7 @@ creatinine_egfr_cohort = (
 
 creatinine_egfr_cohort = (
     creatinine_egfr_cohort
+    .withColumn('egfr_creat', f.round(f.col('egfr_creat')))
     .withColumn('egfr_group',
                 f.when(f.col("egfr_creat") >=90,"≥90")
                  .when((f.col("egfr_creat") >= 60) & (f.col("egfr_creat") <= 89), "60-89")
