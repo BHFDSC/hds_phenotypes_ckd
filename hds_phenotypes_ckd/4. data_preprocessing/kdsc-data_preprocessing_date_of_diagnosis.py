@@ -58,7 +58,7 @@ ckd = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_ckd
 
 # COMMAND ----------
 
-egfr = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_egfr_{algorithm_timestamp}')
+egfr = spark.table(f'{dsa}.{proj}_kdsc_{algorithm_version}_data_preprocessing_creatinine_egfr_{algorithm_timestamp}')
 
 # COMMAND ----------
 
