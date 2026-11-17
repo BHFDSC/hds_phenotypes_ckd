@@ -252,4 +252,4 @@ Output tables include:
 
 ## Use within SAIL / R Environment
 
-Future development includes an R-based implementation for use in SAIL Databank.
+We also developed an R implementation of the KDSC CKD algorithm, enabling its use in data environments where PySpark is not available. We plan to adapt the logic and codelists for other national datasets, which differ in structure and coding terminology, so that the algorithm can be run on other patient populations, such as the Welsh data held within SAIL Databank. The code and documentation are available on GitHub: https://github.com/BHFDSC/hds_phenotypes_ckd_r
